@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { buildImage, deployCron, deployApi } from "./api.js";
+import { buildImage, deployCron, deployApi, fetchBranches, fetchCommits } from "./api.js";
 
 function ResultBox({ result, error }) {
   if (error) {
@@ -15,14 +15,63 @@ function BuildCard({ onImageUri }) {
   const [form, setForm] = useState({
     repo_url: "",
     branch: "main",
+    commit: "",
     function_name: "",
     subdir: "",
   });
+  const [branches, setBranches] = useState([]);
+  const [commits, setCommits] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [loadingCommits, setLoadingCommits] = useState(false);
+  const [branchError, setBranchError] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  const loadBranches = async () => {
+    if (!form.repo_url) return;
+    setLoadingBranches(true);
+    setBranchError(null);
+    setBranches([]);
+    setCommits([]);
+    try {
+      const data = await fetchBranches(form.repo_url);
+      setBranches(data.branches || []);
+      const defaultBranch =
+        data.branches.find((b) => b === "main") ||
+        data.branches.find((b) => b === "master") ||
+        data.branches[0] ||
+        "";
+      setForm((f) => ({ ...f, branch: defaultBranch, commit: "" }));
+      if (defaultBranch) await loadCommits(form.repo_url, defaultBranch);
+    } catch (err) {
+      setBranchError(err.message);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  const loadCommits = async (repoUrl, branch) => {
+    setLoadingCommits(true);
+    setCommits([]);
+    try {
+      const data = await fetchCommits(repoUrl, branch);
+      setCommits(data.commits || []);
+    } catch (err) {
+      setBranchError(err.message);
+    } finally {
+      setLoadingCommits(false);
+    }
+  };
+
+  const onBranchChange = async (e) => {
+    const branch = e.target.value;
+    setForm((f) => ({ ...f, branch, commit: "" }));
+    if (branch) await loadCommits(form.repo_url, branch);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -46,17 +95,52 @@ function BuildCard({ onImageUri }) {
       <form onSubmit={submit}>
         <label>
           Repo URL
-          <input
-            required
-            placeholder="https://github.com/org/repo.git"
-            value={form.repo_url}
-            onChange={update("repo_url")}
-          />
+          <div className="inline-field">
+            <input
+              required
+              placeholder="https://github.com/org/repo.git"
+              value={form.repo_url}
+              onChange={update("repo_url")}
+            />
+            <button type="button" onClick={loadBranches} disabled={!form.repo_url || loadingBranches}>
+              {loadingBranches ? "Loading..." : "Load Branches"}
+            </button>
+          </div>
         </label>
+
+        {branchError && <p className="field-error">{branchError}</p>}
+
         <label>
           Branch
-          <input value={form.branch} onChange={update("branch")} />
+          {branches.length > 0 ? (
+            <select value={form.branch} onChange={onBranchChange}>
+              {branches.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input value={form.branch} onChange={update("branch")} placeholder="main" />
+          )}
         </label>
+
+        <label>
+          Commit {loadingCommits && <span className="hint">(loading...)</span>}
+          <select
+            value={form.commit}
+            onChange={update("commit")}
+            disabled={commits.length === 0}
+          >
+            <option value="">Latest on branch (HEAD)</option>
+            {commits.map((c) => (
+              <option key={c.sha} value={c.sha}>
+                {c.short_sha} — {c.message.slice(0, 60)}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label>
           Function name
           <input
@@ -231,8 +315,20 @@ function ApiCard({ imageUri }) {
   );
 }
 
+const MAIN_TABS = [
+  { id: "build", label: "1. Build & Push" },
+  { id: "deploy", label: "2. Deploy Resources" },
+];
+
+const DEPLOY_SUB_TABS = [
+  { id: "cron", label: "Cron Job" },
+  { id: "api", label: "API Gateway" },
+];
+
 export default function App() {
   const [imageUri, setImageUri] = useState("");
+  const [activeTab, setActiveTab] = useState("build");
+  const [deploySubTab, setDeploySubTab] = useState("cron");
 
   return (
     <div className="app">
@@ -240,10 +336,41 @@ export default function App() {
         <h1>PaaS POC Console</h1>
         <p>Talks to your local FastAPI backend at http://localhost:8000</p>
       </header>
+
+      <div className="tabs">
+        {MAIN_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`tab ${activeTab === tab.id ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <main>
-        <BuildCard onImageUri={setImageUri} />
-        <CronCard imageUri={imageUri} />
-        <ApiCard imageUri={imageUri} />
+        {activeTab === "build" && <BuildCard onImageUri={setImageUri} />}
+
+        {activeTab === "deploy" && (
+          <>
+            <div className="subtabs">
+              {DEPLOY_SUB_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`subtab ${deploySubTab === tab.id ? "active" : ""}`}
+                  onClick={() => setDeploySubTab(tab.id)}
+                  type="button"
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {deploySubTab === "cron" && <CronCard imageUri={imageUri} />}
+            {deploySubTab === "api" && <ApiCard imageUri={imageUri} />}
+          </>
+        )}
       </main>
     </div>
   );

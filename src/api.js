@@ -17,8 +17,36 @@ async function postJson(path, body) {
   return data;
 }
 
-export function buildImage({ repo_url, branch, function_name, subdir }) {
-  return postJson("/build", { repo_url, branch, function_name, subdir: subdir || null });
+async function getJson(path, params) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch(`${BASE_URL}${path}?${query}`);
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const detail = data?.detail || res.statusText || "Request failed";
+    throw new Error(detail);
+  }
+
+  return data;
+}
+
+export function fetchBranches(repo_url) {
+  return getJson("/repo/branches", { repo_url });
+}
+
+export function fetchCommits(repo_url, branch) {
+  return getJson("/repo/commits", { repo_url, branch });
+}
+
+export function buildImage({ repo_url, branch, commit, function_name, subdir }) {
+  return postJson("/build", {
+    repo_url,
+    branch,
+    commit: commit || null,
+    function_name,
+    subdir: subdir || null,
+  });
 }
 
 export function deployCron({ function_name, image_uri, schedule_expression, memory_size, timeout_seconds }) {

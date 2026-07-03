@@ -34,17 +34,76 @@ header p {
   font-size: 14px;
 }
 
-main {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #eceef2;
+  border-radius: 10px;
+  margin-bottom: 28px;
+}
+
+.tabs .tab {
+  background: transparent;
+  border: none;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b5f6a;
+  cursor: pointer;
+  border-radius: 7px;
+  margin-top: 0;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tabs .tab:hover {
+  color: #1a1a1a;
+}
+
+.tabs .tab.active {
+  background: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+}
+
+.subtabs {
+  display: flex;
   gap: 20px;
+  border-bottom: 1px solid #e2e4e8;
+  margin-bottom: 20px;
+}
+
+.subtab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8a8f98;
+  cursor: pointer;
+  border-radius: 0;
+  margin-top: 0;
+}
+
+.subtab:hover {
+  color: #1a1a1a;
+}
+
+.subtab.active {
+  color: #4f6df5;
+  border-bottom-color: #4f6df5;
+}
+
+main {
+  max-width: 640px;
 }
 
 .card {
   background: #fff;
   border: 1px solid #e2e4e8;
   border-radius: 10px;
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   min-width: 0;
