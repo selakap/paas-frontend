@@ -396,7 +396,6 @@ export default function App() {
     <div className="app">
       <header>
         <h1>PaaS POC Console</h1>
-        <p>Talks to your local FastAPI backend at http://localhost:8000</p>
       </header>
 
       <div className="tabs">
