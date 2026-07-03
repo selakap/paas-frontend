@@ -39,6 +39,35 @@ export function fetchCommits(repo_url, branch) {
   return getJson("/repo/commits", { repo_url, branch });
 }
 
+export function createApprovalRequest({ repo_url, branch, commit, function_name, requested_by, notes }) {
+  return postJson("/approvals", {
+    repo_url,
+    branch,
+    commit: commit || null,
+    function_name,
+    requested_by: requested_by || null,
+    notes: notes || null,
+  });
+}
+
+export async function listApprovals(status) {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await fetch(`${BASE_URL}/approvals${query}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.detail || res.statusText || "Request failed");
+  }
+  return data;
+}
+
+export function decideApproval(requestId, { status, decided_by, notes }) {
+  return postJson(`/approvals/${requestId}/decision`, {
+    status,
+    decided_by: decided_by || null,
+    notes: notes || null,
+  });
+}
+
 export function buildImage({ repo_url, branch, commit, function_name, subdir }) {
   return postJson("/build", {
     repo_url,

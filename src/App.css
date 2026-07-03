@@ -239,6 +239,141 @@ input:focus, select:focus {
   background: #f4f6ff;
 }
 
+.card-subtitle {
+  margin: -8px 0 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.card-subtitle a,
+header a {
+  color: #4f6df5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.card-subtitle a:hover,
+header a:hover {
+  text-decoration: underline;
+}
+
+.approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.approval-card {
+  background: #fff;
+  border: 1px solid #e2e4e8;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.approval-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.approval-fn {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.qg-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.qg-ok {
+  background: #eafaf0;
+  color: #1c6b3f;
+}
+
+.qg-error {
+  background: #fdecec;
+  color: #a3231f;
+}
+
+.qg-unknown {
+  background: #eceef2;
+  color: #5b5f6a;
+}
+
+.qg-scanning {
+  background: #eef2ff;
+  color: #4f6df5;
+}
+
+.approval-meta {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 12px;
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.approval-meta dt {
+  color: #8a8f98;
+  font-weight: 600;
+}
+
+.approval-meta dd {
+  margin: 0;
+  color: #1a1a1a;
+  word-break: break-word;
+}
+
+.approval-meta .mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.approval-meta a {
+  color: #4f6df5;
+}
+
+.approval-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.approve-btn {
+  margin-top: 0;
+  background: #1c6b3f;
+}
+
+.reject-btn {
+  margin-top: 0;
+  background: #a3231f;
+}
+
+.decision-banner {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.decision-banner.approved {
+  background: #eafaf0;
+  color: #1c6b3f;
+}
+
+.decision-banner.rejected {
+  background: #fdecec;
+  color: #a3231f;
+}
+
 .row {
   display: flex;
   gap: 12px;
