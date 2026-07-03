@@ -99,6 +99,10 @@ main {
   max-width: 640px;
 }
 
+.tab-hidden {
+  display: none;
+}
+
 .card {
   background: #fff;
   border: 1px solid #e2e4e8;
@@ -129,7 +133,7 @@ label {
   color: #333;
 }
 
-input {
+input, select {
   font-size: 14px;
   font-weight: 400;
   padding: 8px 10px;
@@ -138,10 +142,101 @@ input {
   outline: none;
   width: 100%;
   min-width: 0;
+  background: #fff;
+  font-family: inherit;
 }
 
-input:focus {
+input:focus, select:focus {
   border-color: #4f6df5;
+}
+
+.inline-field {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.inline-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.inline-field button {
+  margin-top: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.field-error {
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #a3231f;
+}
+
+.hint {
+  font-weight: 400;
+  color: #8a8f98;
+}
+
+.env-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.env-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.env-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.env-row input {
+  flex: 1;
+  min-width: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+}
+
+.env-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-top: 0;
+  border: 1px solid #e2e4e8;
+  border-radius: 6px;
+  background: #fff;
+  color: #8a8f98;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.env-remove:hover {
+  color: #a3231f;
+  border-color: #f3b8b8;
+}
+
+.env-add {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #4f6df5;
+  border: 1px dashed #c3cbf5;
+  font-size: 12px;
+}
+
+.env-add:hover {
+  background: #f4f6ff;
 }
 
 .row {

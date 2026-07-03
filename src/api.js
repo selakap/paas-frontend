@@ -49,21 +49,23 @@ export function buildImage({ repo_url, branch, commit, function_name, subdir }) 
   });
 }
 
-export function deployCron({ function_name, image_uri, schedule_expression, memory_size, timeout_seconds }) {
+export function deployCron({ function_name, image_uri, schedule_expression, memory_size, timeout_seconds, environment }) {
   return postJson("/deploy/cron", {
     function_name,
     image_uri,
     schedule_expression,
     memory_size: Number(memory_size),
     timeout_seconds: Number(timeout_seconds),
+    environment: environment || {},
   });
 }
 
-export function deployApi({ function_name, image_uri, memory_size, timeout_seconds }) {
+export function deployApi({ function_name, image_uri, memory_size, timeout_seconds, environment }) {
   return postJson("/deploy/api", {
     function_name,
     image_uri,
     memory_size: Number(memory_size),
     timeout_seconds: Number(timeout_seconds),
+    environment: environment || {},
   });
 }

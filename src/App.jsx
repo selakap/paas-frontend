@@ -11,6 +11,56 @@ function ResultBox({ result, error }) {
   return null;
 }
 
+function EnvVarsEditor({ rows, onChange }) {
+  const updateRow = (index, field) => (e) => {
+    const next = rows.slice();
+    next[index] = { ...next[index], [field]: e.target.value };
+    onChange(next);
+  };
+
+  const addRow = () => onChange([...rows, { key: "", value: "" }]);
+
+  const removeRow = (index) => () => {
+    const next = rows.slice();
+    next.splice(index, 1);
+    onChange(next.length ? next : [{ key: "", value: "" }]);
+  };
+
+  return (
+    <div className="env-editor">
+      <span className="env-label">Environment variables</span>
+      {rows.map((row, i) => (
+        <div className="env-row" key={i}>
+          <input
+            placeholder="KEY"
+            value={row.key}
+            onChange={updateRow(i, "key")}
+          />
+          <input
+            placeholder="value"
+            value={row.value}
+            onChange={updateRow(i, "value")}
+          />
+          <button type="button" className="env-remove" onClick={removeRow(i)} aria-label="Remove variable">
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className="env-add" onClick={addRow}>
+        + Add variable
+      </button>
+    </div>
+  );
+}
+
+function envRowsToObject(rows) {
+  const obj = {};
+  for (const { key, value } of rows) {
+    if (key.trim()) obj[key.trim()] = value;
+  }
+  return obj;
+}
+
 function BuildCard({ onImageUri }) {
   const [form, setForm] = useState({
     repo_url: "",
@@ -91,7 +141,7 @@ function BuildCard({ onImageUri }) {
 
   return (
     <section className="card">
-      <h2>1. Build &amp; Push to ECR</h2>
+      <h2>Build &amp; Push to ECR</h2>
       <form onSubmit={submit}>
         <label>
           Repo URL
@@ -142,7 +192,7 @@ function BuildCard({ onImageUri }) {
         </label>
 
         <label>
-          Function name
+          Image name
           <input
             required
             placeholder="my-fn"
@@ -175,6 +225,7 @@ function CronCard({ imageUri }) {
     memory_size: 512,
     timeout_seconds: 60,
   });
+  const [envRows, setEnvRows] = useState([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -187,7 +238,11 @@ function CronCard({ imageUri }) {
     setResult(null);
     setError(null);
     try {
-      const data = await deployCron(form);
+      const data = await deployCron({
+        ...form,
+        image_uri: form.image_uri || imageUri,
+        environment: envRowsToObject(envRows),
+      });
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -198,7 +253,7 @@ function CronCard({ imageUri }) {
 
   return (
     <section className="card">
-      <h2>2. Deploy as Cron Job</h2>
+      <h2>Deploy as Cron Job</h2>
       <form onSubmit={submit}>
         <label>
           Function name
@@ -237,6 +292,7 @@ function CronCard({ imageUri }) {
             <input type="number" value={form.timeout_seconds} onChange={update("timeout_seconds")} />
           </label>
         </div>
+        <EnvVarsEditor rows={envRows} onChange={setEnvRows} />
         <button type="submit" disabled={loading}>
           {loading ? "Deploying (can take a minute)..." : "Deploy Cron"}
         </button>
@@ -253,6 +309,7 @@ function ApiCard({ imageUri }) {
     memory_size: 512,
     timeout_seconds: 30,
   });
+  const [envRows, setEnvRows] = useState([{ key: "", value: "" }]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -265,7 +322,11 @@ function ApiCard({ imageUri }) {
     setResult(null);
     setError(null);
     try {
-      const data = await deployApi(form);
+      const data = await deployApi({
+        ...form,
+        image_uri: form.image_uri || imageUri,
+        environment: envRowsToObject(envRows),
+      });
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -276,7 +337,7 @@ function ApiCard({ imageUri }) {
 
   return (
     <section className="card">
-      <h2>3. Deploy behind API Gateway</h2>
+      <h2>Deploy behind API Gateway</h2>
       <form onSubmit={submit}>
         <label>
           Function name
@@ -306,6 +367,7 @@ function ApiCard({ imageUri }) {
             <input type="number" value={form.timeout_seconds} onChange={update("timeout_seconds")} />
           </label>
         </div>
+        <EnvVarsEditor rows={envRows} onChange={setEnvRows} />
         <button type="submit" disabled={loading}>
           {loading ? "Deploying (can take a minute)..." : "Deploy API"}
         </button>
@@ -316,8 +378,8 @@ function ApiCard({ imageUri }) {
 }
 
 const MAIN_TABS = [
-  { id: "build", label: "1. Build & Push" },
-  { id: "deploy", label: "2. Deploy Resources" },
+  { id: "build", label: "Build & Push" },
+  { id: "deploy", label: "Deploy Resources" },
 ];
 
 const DEPLOY_SUB_TABS = [
@@ -351,26 +413,30 @@ export default function App() {
       </div>
 
       <main>
-        {activeTab === "build" && <BuildCard onImageUri={setImageUri} />}
+        <div className={activeTab === "build" ? "" : "tab-hidden"}>
+          <BuildCard onImageUri={setImageUri} />
+        </div>
 
-        {activeTab === "deploy" && (
-          <>
-            <div className="subtabs">
-              {DEPLOY_SUB_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`subtab ${deploySubTab === tab.id ? "active" : ""}`}
-                  onClick={() => setDeploySubTab(tab.id)}
-                  type="button"
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {deploySubTab === "cron" && <CronCard imageUri={imageUri} />}
-            {deploySubTab === "api" && <ApiCard imageUri={imageUri} />}
-          </>
-        )}
+        <div className={activeTab === "deploy" ? "" : "tab-hidden"}>
+          <div className="subtabs">
+            {DEPLOY_SUB_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                className={`subtab ${deploySubTab === tab.id ? "active" : ""}`}
+                onClick={() => setDeploySubTab(tab.id)}
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className={deploySubTab === "cron" ? "" : "tab-hidden"}>
+            <CronCard imageUri={imageUri} />
+          </div>
+          <div className={deploySubTab === "api" ? "" : "tab-hidden"}>
+            <ApiCard imageUri={imageUri} />
+          </div>
+        </div>
       </main>
     </div>
   );
