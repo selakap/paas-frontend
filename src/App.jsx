@@ -1,6 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { buildImage, deployCron, deployApi, fetchBranches, fetchCommits, createApprovalRequest } from "./api.js";
+import {
+  buildImage,
+  deployCron,
+  deployApi,
+  fetchBranches,
+  fetchCommits,
+  createApprovalRequest,
+  findApprovalForCommit,
+} from "./api.js";
 import AdminPage from "./AdminPage.jsx";
 
 function ResultBox({ result, error }) {
@@ -11,6 +19,20 @@ function ResultBox({ result, error }) {
     return <pre className="box success">{JSON.stringify(result, null, 2)}</pre>;
   }
   return null;
+}
+
+function ApprovalGateBadge({ checking, approval }) {
+  if (checking) return <span className="qg-badge qg-scanning">Checking approval...</span>;
+  if (!approval) {
+    return <span className="qg-badge qg-error">Not approved — submit for approval first</span>;
+  }
+  if (approval.status === "approved") {
+    return <span className="qg-badge qg-ok">Approved{approval.decided_by ? ` by ${approval.decided_by}` : ""}</span>;
+  }
+  if (approval.status === "pending") {
+    return <span className="qg-badge qg-error">Not approved — pending review</span>;
+  }
+  return <span className="qg-badge qg-error">Not approved — rejected</span>;
 }
 
 function EnvVarsEditor({ rows, onChange }) {
@@ -242,6 +264,9 @@ function BuildCard({ onImageUri }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  const [approval, setApproval] = useState(null);
+  const [checkingApproval, setCheckingApproval] = useState(false);
+
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
   const loadBranches = async () => {
@@ -286,8 +311,37 @@ function BuildCard({ onImageUri }) {
     if (branch) await loadCommits(form.repo_url, branch);
   };
 
+  // Commits are listed newest-first, so the first entry is the branch HEAD —
+  // used to resolve the effective commit when the user leaves it on "Latest".
+  const effectiveCommit = form.commit || (commits[0] && commits[0].sha) || "";
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!form.repo_url || !effectiveCommit) {
+      setApproval(null);
+      return undefined;
+    }
+    setCheckingApproval(true);
+    findApprovalForCommit(form.repo_url, effectiveCommit)
+      .then((record) => {
+        if (!cancelled) setApproval(record);
+      })
+      .catch(() => {
+        if (!cancelled) setApproval(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingApproval(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.repo_url, effectiveCommit]);
+
+  const isApproved = approval && approval.status === "approved";
+
   const submit = async (e) => {
     e.preventDefault();
+    if (!isApproved) return;
     setLoading(true);
     setResult(null);
     setError(null);
@@ -354,6 +408,18 @@ function BuildCard({ onImageUri }) {
           </select>
         </label>
 
+        {form.repo_url && effectiveCommit && (
+          <div className="approval-gate">
+            <ApprovalGateBadge checking={checkingApproval} approval={approval} />
+            {!checkingApproval && !isApproved && (
+              <span className="hint">
+                Use the "Request Approval" tab to submit this commit for review, then wait for an admin to
+                approve it before building.
+              </span>
+            )}
+          </div>
+        )}
+
         <label>
           Image name
           <input
@@ -371,7 +437,7 @@ function BuildCard({ onImageUri }) {
             onChange={update("subdir")}
           />
         </label>
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading || checkingApproval || !isApproved}>
           {loading ? "Building..." : "Build & Push"}
         </button>
       </form>

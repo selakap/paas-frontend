@@ -312,6 +312,14 @@ header a:hover {
   color: #4f6df5;
 }
 
+.approval-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: -4px 0 14px;
+}
+
 .approval-meta {
   display: grid;
   grid-template-columns: 110px 1fr;

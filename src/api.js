@@ -68,6 +68,16 @@ export function decideApproval(requestId, { status, decided_by, notes }) {
   });
 }
 
+export async function findApprovalForCommit(repo_url, commit_sha) {
+  if (!repo_url || !commit_sha) return null;
+  const data = await listApprovals();
+  const matches = (data.approvals || []).filter(
+    (a) => a.repo_url === repo_url && a.commit_sha === commit_sha
+  );
+  if (!matches.length) return null;
+  return matches.reduce((latest, r) => (r.id > latest.id ? r : latest));
+}
+
 export function buildImage({ repo_url, branch, commit, function_name, subdir }) {
   return postJson("/build", {
     repo_url,
