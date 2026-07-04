@@ -126,14 +126,6 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
-  useEffect(() => {
-    const stillScanning = requests.some((r) => r.sonar_scan_status === "running");
-    if (!stillScanning) return;
-    const interval = setInterval(load, 5000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requests]);
-
   return (
     <div className="app">
       <header>

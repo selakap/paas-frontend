@@ -145,8 +145,7 @@ function RequestApprovalCard() {
     <section className="card">
       <h2>Request Deploy Approval</h2>
       <p className="card-subtitle">
-        Submit a specific commit for review. An admin must approve it (see the{" "}
-        <Link to="/admin">Admin Review Queue</Link>) before it can be built.
+        Submit a specific commit for review. An admin must approve it before it can be built.
       </p>
       <form onSubmit={submit}>
         <label>
@@ -194,7 +193,7 @@ function RequestApprovalCard() {
         </label>
 
         <label>
-          Function name
+          Sonar project name
           <input
             required
             placeholder="my-fn"
@@ -356,7 +355,7 @@ function BuildCard({ onImageUri }) {
         </label>
 
         <label>
-          Function name
+          Image name
           <input
             required
             placeholder="my-fn"
@@ -417,7 +416,7 @@ function CronCard({ imageUri }) {
 
   return (
     <section className="card">
-      <h2>2. Deploy as Cron Job</h2>
+      <h2>Deploy as Cron Job</h2>
       <form onSubmit={submit}>
         <label>
           Function name
@@ -501,7 +500,7 @@ function ApiCard({ imageUri }) {
 
   return (
     <section className="card">
-      <h2>3. Deploy behind API Gateway</h2>
+      <h2>Deploy behind API Gateway</h2>
       <form onSubmit={submit}>
         <label>
           Function name
@@ -542,9 +541,9 @@ function ApiCard({ imageUri }) {
 }
 
 const MAIN_TABS = [
-  { id: "approval", label: "1. Request Approval" },
-  { id: "build", label: "2. Build & Push" },
-  { id: "deploy", label: "3. Deploy Resources" },
+  { id: "approval", label: "Request Approval" },
+  { id: "build", label: "Build & Push" },
+  { id: "deploy", label: "Deploy Resources" },
 ];
 
 const DEPLOY_SUB_TABS = [
@@ -561,9 +560,6 @@ function Console() {
     <div className="app">
       <header>
         <h1>PaaS POC Console</h1>
-        <p>
-          Talks to your local FastAPI backend at http://localhost:8000 · <Link to="/admin">Admin Review Queue →</Link>
-        </p>
       </header>
 
       <div className="tabs">
