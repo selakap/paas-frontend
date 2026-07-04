@@ -105,6 +105,18 @@ routing, just conditional `tab-hidden` class):
    - Same Repo URL / Branch / Commit pattern as above, plus **Image name**
      and an optional **Subdir** (for repos where the Dockerfile isn't at
      the repo root).
+   - **Approval gate**: as soon as a repo + commit are selected, the UI
+     resolves the effective commit SHA (the picked commit, or the branch
+     HEAD from the loaded commits list if left on "Latest on branch") and
+     looks it up via `findApprovalForCommit` (`GET /approvals`, filtered
+     client-side by `repo_url` + `commit_sha`). An `ApprovalGateBadge` shows
+     one of: "Checking approval...", green "Approved" (with who approved
+     it), or red "Not approved" (not submitted / pending review /
+     rejected) with a hint to use the Request Approval tab first. The
+     **Build & Push** button stays `disabled` until that exact commit has
+     an `approved` record — mirroring the same check the backend already
+     enforces server-side in `POST /build` (which 403s otherwise), just
+     surfaced before the user submits.
    - Submits to `POST /build` (`buildImage`). On success, the returned
      `image_uri` is lifted up via the `onImageUri` callback and auto-fills
      the Image URI field in both deploy cards below (still editable).
@@ -151,6 +163,7 @@ underneath its form after submitting, via `ResultBox`.
 | `fetchCommits(repo_url, branch)` | `GET /repo/commits` | List commits on a branch |
 | `createApprovalRequest({...})` | `POST /approvals` | Submit a commit for review (kicks off Sonar scan) |
 | `listApprovals(status)` | `GET /approvals?status=` | List approval requests, optionally filtered by status |
+| `findApprovalForCommit(repo_url, commit_sha)` | `GET /approvals` (client-filtered) | Find the latest approval record for an exact repo + commit, used to gate the Build & Push button |
 | `decideApproval(requestId, {...})` | `POST /approvals/{id}/decision` | Approve or reject a pending request |
 | `buildImage({...})` | `POST /build` | Build the Docker image from a repo/branch/commit and push to ECR |
 | `deployCron({...})` | `POST /deploy/cron` | Deploy the image as a Lambda on an EventBridge schedule |
@@ -176,3 +189,8 @@ is what gets shown in the red error box.
 - No auto-refresh anywhere — the admin queue must be refreshed manually
   after triggering a Sonar scan or making a decision elsewhere.
 - No pagination on the approvals list.
+- Approval is scoped to the commit SHA only (matching the backend's
+  `find_approved(repo_url, commit_sha)` check) — not to the branch or
+  function name it was requested under. Approving a commit once lets it be
+  built as any function name, from any branch that happens to point at
+  that same commit.
