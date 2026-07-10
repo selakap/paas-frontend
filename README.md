@@ -9,6 +9,9 @@ scheduled cron job or behind an API Gateway HTTP endpoint.
 Talks to your FastAPI backend at `http://localhost:8000` (hardcoded in
 `src/api.js` — change `BASE_URL` there if your backend runs elsewhere).
 
+For a non-technical, screenshot-driven walkthrough of the same flow, see
+[`SmartGlue-PaaS-POC-User-Guide.docx`](./SmartGlue-PaaS-POC-User-Guide.docx).
+
 ## Prerequisites
 
 - Node.js (you already have this, from setting up the CDK CLI)
