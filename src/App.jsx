@@ -606,10 +606,133 @@ function ApiCard({ imageUri }) {
   );
 }
 
+function HistoryStatusBadge({ status }) {
+  if (status === "success" || status === "approved") {
+    return <span className="qg-badge qg-ok">{status === "approved" ? "Approved" : "Success"}</span>;
+  }
+  if (status === "failed" || status === "rejected") {
+    return <span className="qg-badge qg-error">{status === "rejected" ? "Rejected" : "Failed"}</span>;
+  }
+  return <span className="qg-badge qg-unknown">{status}</span>;
+}
+
+// Mock data — the backend doesn't persist build/deploy events yet, only
+// approvals. This is placeholder content until that history endpoint exists.
+const MOCK_HISTORY = [
+  {
+    id: 1,
+    action: "Deploy (API Gateway)",
+    function_name: "orders-webhook",
+    repo_url: "https://github.com/acme/orders-service.git",
+    branch: "main",
+    commit_sha: "a1b2c3d",
+    status: "success",
+    performed_by: "J. Alvarez",
+    timestamp: "2026-07-22T14:32:00",
+  },
+  {
+    id: 2,
+    action: "Build & Push",
+    function_name: "orders-webhook",
+    repo_url: "https://github.com/acme/orders-service.git",
+    branch: "main",
+    commit_sha: "a1b2c3d",
+    status: "success",
+    performed_by: "J. Alvarez",
+    timestamp: "2026-07-22T14:20:00",
+  },
+  {
+    id: 3,
+    action: "Request Approval",
+    function_name: "invoice-sync",
+    repo_url: "https://github.com/acme/invoice-sync.git",
+    branch: "release/2.3",
+    commit_sha: "9f8e7d6",
+    status: "approved",
+    performed_by: "R. Kim",
+    timestamp: "2026-07-21T09:05:00",
+  },
+  {
+    id: 4,
+    action: "Deploy (Cron Job)",
+    function_name: "nightly-cleanup",
+    repo_url: "https://github.com/acme/ops-jobs.git",
+    branch: "main",
+    commit_sha: "44cba21",
+    status: "failed",
+    performed_by: "R. Kim",
+    timestamp: "2026-07-20T23:10:00",
+  },
+  {
+    id: 5,
+    action: "Request Approval",
+    function_name: "invoice-sync",
+    repo_url: "https://github.com/acme/invoice-sync.git",
+    branch: "release/2.3",
+    commit_sha: "77ac1e2",
+    status: "rejected",
+    performed_by: "R. Kim",
+    timestamp: "2026-07-19T16:47:00",
+  },
+  {
+    id: 6,
+    action: "Build & Push",
+    function_name: "payments-gateway",
+    repo_url: "https://github.com/acme/payments.git",
+    branch: "main",
+    commit_sha: "b0aa931",
+    status: "success",
+    performed_by: "M. Singh",
+    timestamp: "2026-07-18T11:02:00",
+  },
+];
+
+function HistoryCard({ entry }) {
+  return (
+    <div className="approval-card">
+      <div className="approval-header">
+        <span className="approval-fn">{entry.function_name}</span>
+        <HistoryStatusBadge status={entry.status} />
+      </div>
+      <dl className="approval-meta">
+        <dt>Action</dt>
+        <dd>{entry.action}</dd>
+        <dt>Repo</dt>
+        <dd>{entry.repo_url}</dd>
+        <dt>Branch</dt>
+        <dd>{entry.branch}</dd>
+        <dt>Commit</dt>
+        <dd className="mono">{entry.commit_sha}</dd>
+        <dt>By</dt>
+        <dd>{entry.performed_by}</dd>
+        <dt>When</dt>
+        <dd>{new Date(entry.timestamp).toLocaleString()}</dd>
+      </dl>
+    </div>
+  );
+}
+
+function HistoryTab() {
+  return (
+    <section className="card">
+      <h2>Your Activity History</h2>
+      <p className="card-subtitle">
+        A read-only log of your own approval requests, builds, and deploys.
+      </p>
+      <div className="approval-list">
+        {MOCK_HISTORY.map((entry) => (
+          <HistoryCard key={entry.id} entry={entry} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const MAIN_TABS = [
   { id: "approval", label: "Request Approval" },
   { id: "build", label: "Build & Push" },
   { id: "deploy", label: "Deploy Resources" },
+  { id: "history", label: "History" },
 ];
 
 const DEPLOY_SUB_TABS = [
@@ -669,6 +792,10 @@ function Console() {
           <div className={deploySubTab === "api" ? "" : "tab-hidden"}>
             <ApiCard imageUri={imageUri} />
           </div>
+        </div>
+
+        <div className={activeTab === "history" ? "" : "tab-hidden"}>
+          <HistoryTab />
         </div>
       </main>
     </div>
